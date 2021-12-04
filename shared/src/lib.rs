@@ -1,3 +1,7 @@
+use std::io::BufRead;
+use std::fs::File;
+use std::io::BufReader;
+use std::io::Lines;
 use std::fmt;
 use std::io;
 
@@ -31,3 +35,9 @@ impl fmt::Display for MyError {
 }
 
 impl std::error::Error for MyError {}
+
+pub fn file_lines(file_path: &str) -> Result<Lines<BufReader<File>>, MyError> {
+    let f = File::open(file_path)?;
+    let f = BufReader::new(f);
+    Ok(f.lines())
+}
