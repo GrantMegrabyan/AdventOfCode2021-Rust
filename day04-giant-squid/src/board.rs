@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Board {
     numbers: HashMap<i32, (usize, usize)>,
     marked: HashMap<(usize, usize), (i32, bool)>,

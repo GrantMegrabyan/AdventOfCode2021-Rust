@@ -5,21 +5,43 @@ use shared::{file_lines, read_first_arg, MyError};
 fn main() -> Result<(), MyError> {
     let input = read_first_arg()?;
 
-    pick_first_to_win(&input)?;
+    let (boards, numbers) = read_input(&input)?;
+
+    pick_first_to_win(boards.iter().cloned().collect(), numbers.clone())?;
+    pick_last_to_win(boards, numbers)?;
 
     Ok(())
 }
 
-fn pick_first_to_win(file_path: &str) -> Result<(), MyError> {
-    let (mut boards, numbers) = read_input(file_path)?;
+fn pick_first_to_win(mut boards: Vec<Board>, numbers: Vec<i32>) -> Result<(), MyError> {
     for num in numbers {
         print!("{} ", num);
         for i in 0..boards.len() {
             if boards[i].mark(num) {
                 println!();
+                println!("First board to win:");
                 println!("{}", boards[i]);
                 println!("Score = {}", num * boards[i].unmarked_sum);
                 return Ok(());
+            }
+        }
+    }
+    Ok(())
+}
+
+fn pick_last_to_win(mut boards: Vec<Board>, numbers: Vec<i32>) -> Result<(), MyError> {
+    for num in numbers {
+        print!("{} ", num);
+        for i in (0..boards.len()).rev() {
+            if boards[i].mark(num) {
+                if boards.len() == 1 {
+                    println!();
+                    println!("Last board to win:");
+                    println!("{}", boards[i]);
+                    println!("Score = {}", num * boards[i].unmarked_sum);
+                    return Ok(());
+                }
+                boards.remove(i);
             }
         }
     }
