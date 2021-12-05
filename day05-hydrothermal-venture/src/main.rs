@@ -18,9 +18,6 @@ fn count_dangerous_points(file_path: &str) -> Result<(), MyError> {
 
     for input_line in file_lines(file_path)? {
         let line = Line::from_input(&input_line.unwrap());
-        if !line.is_parallel() {
-            continue;
-        }
         for point in line.iter() {
             match field.entry(point) {
                 Entry::Vacant(v) => {
@@ -35,6 +32,6 @@ fn count_dangerous_points(file_path: &str) -> Result<(), MyError> {
             }
         }
     }
-    println!("Danger counter: {}", danger_counter);
+    println!("Danger counter (strait and diagonal lines): {}", danger_counter);
     Ok(())
 }
