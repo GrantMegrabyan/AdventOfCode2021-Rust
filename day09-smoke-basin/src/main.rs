@@ -1,9 +1,6 @@
 use shared::{file_lines, read_first_arg, MyError};
-use std::{
-    collections::{HashMap, HashSet},
-    fs::File,
-    io::{BufRead, BufReader, Read},
-};
+
+type Point = (usize, usize);
 
 fn main() -> Result<(), MyError> {
     let file_path = read_first_arg()?;
@@ -20,49 +17,58 @@ fn main() -> Result<(), MyError> {
     Ok(())
 }
 
-fn calculate_risk_level(input: &Vec<Vec<u32>>) -> u32 {
-    let max_row = input.len() - 1;
-    let max_col = input[0].len() - 1;
-    let get_adj = |row_idx: usize, col_idx: usize| {
-        let mut adj: Vec<(usize, usize)> = vec![];
-        if row_idx > 0 {
-            adj.push((row_idx - 1, col_idx));
-        }
-        if col_idx > 0 {
-            adj.push((row_idx, col_idx - 1));
-        }
-        if row_idx < max_row {
-            adj.push((row_idx + 1, col_idx));
-        }
-        if col_idx < max_col {
-            adj.push((row_idx, col_idx + 1));
-        }
-        adj
-    };
+fn calculate_risk_level(heightmap: &Vec<Vec<u32>>) -> u32 {
+    get_low_points(heightmap)
+        .iter()
+        .map(|(row_idx, col_idx)| &heightmap[*row_idx][*col_idx] + 1)
+        .sum()
+}
 
-    input
+fn get_low_points(heightmap: &Vec<Vec<u32>>) -> Vec<Point> {
+    let max_row = heightmap.len() - 1;
+    let max_col = heightmap[0].len() - 1;
+    let get_adj = |row_idx: usize, col_idx: usize| get_adj_idx(max_row, max_col, row_idx, col_idx);
+
+    heightmap
         .iter()
         .enumerate()
         .map(|(row_idx, row)| {
             row.iter()
                 .enumerate()
-                .map(move |(col_idx, item)| {
+                .filter_map(|(col_idx, item)| {
                     if get_adj(row_idx, col_idx)
                         .iter()
                         .all(|(adj_row_idx, adj_col_idx)| {
-                            let adj = input.get(*adj_row_idx).unwrap().get(*adj_col_idx).unwrap();
+                            let adj = &heightmap[*adj_row_idx][*adj_col_idx];
                             item < adj
                         })
                     {
-                        item + 1
+                        Some((row_idx, col_idx))
                     } else {
-                        0
+                        None
                     }
                 })
-                .collect::<Vec<u32>>()
+                .collect::<Vec<_>>()
         })
         .flatten()
-        .sum()
+        .collect()
+}
+
+fn get_adj_idx(max_row: usize, max_col: usize, row_idx: usize, col_idx: usize) -> Vec<Point> {
+    let mut adj: Vec<Point> = vec![];
+    if row_idx > 0 {
+        adj.push((row_idx - 1, col_idx));
+    }
+    if col_idx > 0 {
+        adj.push((row_idx, col_idx - 1));
+    }
+    if row_idx < max_row {
+        adj.push((row_idx + 1, col_idx));
+    }
+    if col_idx < max_col {
+        adj.push((row_idx, col_idx + 1));
+    }
+    adj
 }
 
 #[cfg(test)]
