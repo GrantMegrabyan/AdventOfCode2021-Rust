@@ -31,6 +31,15 @@ fn main() -> Result<(), MyError> {
 
     println!("Dots after first fold: {}", paper.points_count());
 
+    for i in 1..commands.len() {
+        match commands[i] {
+            (FoldAxis::Y, pos) => paper.fold_y(pos),
+            (FoldAxis::X, pos) => paper.fold_x(pos),
+        }
+    }
+
+    println!("Paper after all folds: \n{}", paper);
+
     Ok(())
 }
 
@@ -45,15 +54,11 @@ struct Point(usize, usize);
 
 struct Paper {
     grid: HashSet<Point>,
-    cols: usize,
-    rows: usize,
 }
 
 impl Paper {
     pub fn new(grid: HashSet<Point>) -> Self {
-        let cols = grid.iter().map(|p| p.0).max().unwrap();
-        let rows = grid.iter().map(|p| p.1).max().unwrap();
-        Paper { grid, cols, rows }
+        Paper { grid }
     }
 
     pub fn points_count(&self) -> usize {
@@ -101,10 +106,12 @@ impl Paper {
 
 impl Display for Paper {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let cols = self.grid.iter().map(|p| p.0).max().unwrap();
+        let rows = self.grid.iter().map(|p| p.1).max().unwrap();
         let mut s = String::new();
-        for i in 0..self.rows + 1 {
-            for j in 0..self.cols + 1 {
-                s += if self.grid.contains(&Point(i, j)) {
+        for i in 0..rows + 1 {
+            for j in 0..cols + 1 {
+                s += if self.grid.contains(&Point(j, i)) {
                     "#"
                 } else {
                     "."
