@@ -6,8 +6,8 @@ fn main() -> Result<(), MyError> {
     let input = std::fs::read_to_string(file_path).unwrap();
     let (template, rules) = read_input(&input);
 
-    let mut poly = Polymerisation::new(template.to_string(), rules);
-    for _ in 0..10 {
+    let mut poly = Polymerisation::new(template, rules);
+    for _ in 0..40 {
         poly.step();
     }
     let (most, least) = poly.most_least_count();
@@ -18,50 +18,53 @@ fn main() -> Result<(), MyError> {
 }
 
 struct Polymerisation {
-    pub template: String,
     rules: HashMap<String, char>,
-    counts: HashMap<char, usize>,
-    step_counter: usize,
+    pairs: HashMap<String, u64>,
+    elements: HashMap<char, u64>,
 }
 
 impl Polymerisation {
     pub fn new(template: String, rules: HashMap<String, char>) -> Self {
-        let mut counts = HashMap::new();
-        template
-            .chars()
-            .for_each(|ch| *counts.entry(ch).or_insert(0) += 1 as usize);
+        let mut pairs: HashMap<String, u64> = HashMap::new();
+        let mut elements: HashMap<char, u64> = HashMap::new();
+
+        let mut prev_char: Option<char> = None;
+        for ch in template.chars() {
+            *elements.entry(ch).or_insert(0) += 1;
+            if let Some(prev_ch) = prev_char {
+                let pair = format!("{}{}", prev_ch, ch);
+                *pairs.entry(pair).or_insert(0) += 1;
+            }
+            prev_char = Some(ch);
+        }
 
         Polymerisation {
-            template,
             rules,
-            counts,
-            step_counter: 0,
+            pairs,
+            elements,
         }
     }
 
     pub fn step(&mut self) {
-        self.step_counter += 1;
+        let mut new_pairs: HashMap<String, u64> = HashMap::new();
+        for (pair, &count) in &self.pairs {
+            let new_element = self.rules[pair];
+            *self.elements.entry(new_element).or_insert(0) += count;
 
-        let mut new_template = String::new();
-        for i in 0..self.template.len() - 1 {
-            let pair = &self.template[i..i + 2];
-            if self.rules.contains_key(pair) {
-                let new_element = self.rules[pair];
-                new_template += &format!("{}{}", &pair[0..1], new_element);
-                *self.counts.entry(new_element).or_insert(0) += 1 as usize;
-            } else {
-                new_template += &pair[0..1];
-            }
+            let new_pair1 = format!("{}{}", &pair[0..1], new_element);
+            *new_pairs.entry(new_pair1).or_insert(0) += count;
+
+            let new_pair2 = format!("{}{}", new_element, &pair[1..2]);
+            *new_pairs.entry(new_pair2).or_insert(0) += count;
         }
-        new_template += &self.template[self.template.len() - 1..];
-        self.template = new_template;
+        self.pairs = new_pairs;
     }
 
-    pub fn most_least_count(&self) -> (usize, usize) {
-        let mut most = usize::MIN;
-        let mut least = usize::MAX;
+    pub fn most_least_count(&self) -> (u64, u64) {
+        let mut most = u64::MIN;
+        let mut least = u64::MAX;
 
-        for (_, &count) in &self.counts {
+        for &count in self.elements.values() {
             most = count.max(most);
             least = count.min(least);
         }
@@ -117,7 +120,6 @@ mod tests {
         let mut poly = Polymerisation::new(template.to_string(), rules);
         for _ in 0..10 {
             poly.step();
-            println!("Step {}: {}", poly.step_counter, poly.template);
         }
 
         let (most, least) = poly.most_least_count();
