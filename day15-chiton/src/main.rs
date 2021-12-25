@@ -67,7 +67,6 @@ impl PartialOrd for Path {
 fn get_full_grid(grid: &[Vec<u8>]) -> Vec<Vec<u8>> {
     let size = grid.len();
     let mut full_grid: Vec<Vec<u8>> = vec![];
-    // for k in 0..5 {
     for i in 0..size {
         full_grid.push(vec![0; size*5]);
         for j in 0..size {
